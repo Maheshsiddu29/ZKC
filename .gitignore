@@ -1,0 +1,19 @@
+# OS / editor
+.DS_Store
+*.log
+
+# Node
+node_modules/
+
+# Build & ZK artifacts (large / reproducible)
+build/
+public/*.wasm
+public/*.zkey
+*.ptau
+*.zkey
+witness.wtns
+proof.json
+public.json
+
+# Secrets/config
+.env
