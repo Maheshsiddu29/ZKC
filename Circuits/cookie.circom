@@ -6,13 +6,14 @@ include "circomlib/circuits/comparators.circom";
 include "circomlib/circuits/bitify.circom";
 
 template CookieProofMulti(NCATS, BITS_SUM) {
-   
-    signal input nonce;       
+       
     signal input origin_id;    
     signal input nowYear;      
     signal input catMask;      
+    signal input nonce_int;
+    signal input nonce_input;
 
-    
+
     signal output nonce_pub;
     signal output origin_pub;
     signal output nowYear_pub;
@@ -44,7 +45,7 @@ template CookieProofMulti(NCATS, BITS_SUM) {
     C <== Hc.out;
 
     
-    nonce_pub  <== nonce;
+    nonce_pub  <== nonce_input;
     origin_pub <== origin_id;
     nowYear_pub <== nowYear;
     mask_pub   <== catMask;
@@ -84,7 +85,7 @@ template CookieProofMulti(NCATS, BITS_SUM) {
     component Hn = Poseidon(5);
     Hn.inputs[0] <== 12345;  
     Hn.inputs[1] <== C;
-    Hn.inputs[2] <== nonce;
+    Hn.inputs[2] <== nonce_int;
     Hn.inputs[3] <== origin_id;
     Hn.inputs[4] <== catMask;
     nullifier <== Hn.out;

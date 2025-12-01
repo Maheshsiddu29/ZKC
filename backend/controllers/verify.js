@@ -44,8 +44,8 @@ export async function postVerify(req, res) {
     }
 
     // 2) check nonce metadata
-    const nonce = publicSignals[IDX.nonce];
-    const meta = getNonce(nonce);
+    const nonce_hex = publicSignals[IDX.nonce];
+    const meta = getNonce(nonce_hex);
     if (!meta) return res.status(409).json({ ok: false, error: "nonce_not_found_or_expired" });
 
     const now = Date.now();
@@ -79,7 +79,7 @@ export async function postVerify(req, res) {
     const predAge18 = Number(publicSignals[IDX.predAge18]) === 1;
 
     // 7) Mark nonce used and record nullifier
-    markNonceUsed(nonce);
+    markNonceUsed(nonce_hex);
     addNullifier(nullifier);
 
     // 8) Issue a short-lived session token (signed string)
