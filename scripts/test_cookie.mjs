@@ -2,11 +2,17 @@
 import { groth16 } from "snarkjs";
 import fs from "node:fs/promises";
 import assert from "node:assert/strict";
+import path from "node:path";
 
 
-const WASM = "build/cookie_js/cookie.wasm";
-const ZKEY = "build/cookie_final.zkey";
-const VK_PATH = "build/cookie_verification_key.json";
+// const WASM = "build/cookie_js/cookie.wasm";
+// const ZKEY = "build/cookie_final.zkey";
+// const VK_PATH = "build/cookie_verification_key.json";
+
+const WASM = path.resolve("../build/cookie_js/cookie.wasm");
+const ZKEY = path.resolve("../build/cookie_final.zkey");
+const VK_PATH = path.resolve("../build/cookie_verification_key.json");
+
 const vk = JSON.parse(await fs.readFile(VK_PATH, "utf8"));
 const IDX = { nonce:0, origin:1, nowYear:2, mask:3, C:4, nullifier:5, predAny:6, predAge18:7 };
 
