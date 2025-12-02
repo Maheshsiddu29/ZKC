@@ -1,10 +1,11 @@
+// backend/routes/zkpRoutes.js
 import { Router } from "express";
-import { getChallenge } from "../controllers/challenge.js";
-import { postVerify } from "../controllers/verify.js";
+import { challenge } from "../controllers/challenge.js";
+import { verify } from "../controllers/verify.js";
 
-const router = Router();
+const r = Router();
 
-router.get("/challenge", getChallenge);   // GET ?host=...&mask=...
-router.post("/verify", postVerify);
+r.get("/challenge", challenge);
+r.post("/verify", verify);
 
-export default router;
+export default r;
