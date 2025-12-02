@@ -4,6 +4,10 @@
     "snarkjs": "^0.7.5"
   },
   "dependencies": {
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "cookie-signature": "^1.2.1",
+    "express": "^4.21.1",
+    "node-fetch": "^3.3.2",
+    "snarkjs": "^0.7.5"
   }
 }
