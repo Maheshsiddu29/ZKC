@@ -11,6 +11,19 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json({ limit: "1mb" }));
 
+// Serve ad images (you may already have this)
+app.use("/static", express.static(path.join(__dirname, "static")));
+
+// Serve circuit artifacts (wasm + zkey + vkey if needed)
+app.use("/zkp-static", express.static(path.join(__dirname, "..", "build")));
+
+// Serve snarkjs browser bundle
+app.use(
+  "/zkp-lib",
+  express.static(path.join(__dirname, "..", "node_modules/snarkjs/build"))
+);
+
+
 // serve images
 app.use("/static", express.static(path.join(__dirname, "static")));
 
