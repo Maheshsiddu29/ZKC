@@ -4,6 +4,7 @@
     "snarkjs": "^0.7.5"
   },
   "dependencies": {
+    "better-sqlite3": "^12.5.0",
     "cookie-parser": "^1.4.7",
     "cookie-signature": "^1.2.1",
     "express": "^4.22.1",

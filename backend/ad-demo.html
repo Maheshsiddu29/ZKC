@@ -92,70 +92,84 @@
     </div>
 
     <script>
-      async function refreshAd() {
-        const slot = document.getElementById("ad-slot");
-        slot.textContent = "Loading ad…";
-        try {
-          const res = await fetch("/ads", {
-            credentials: "include",
-          });
-          if (!res.ok) {
-            slot.textContent = "Failed to load ad (" + res.status + ")";
-            return;
-          }
-          const data = await res.json();
-          if (!data.ok || !data.ad) {
-            slot.textContent = "No ad available.";
-            return;
-          }
-          const ad = data.ad;
-          slot.innerHTML = `
-            <div class="ad-card">
-              <a href="${ad.clickUrl}" target="_blank" rel="noopener noreferrer">
-                <img src="${ad.imageUrl}" alt="${ad.title}" />
-                <div class="ad-title">${ad.title}</div>
-              </a>
-            </div>
-          `;
-        } catch (err) {
-          console.error(err);
-          slot.textContent = "Error loading ad.";
-        }
+  async function refreshAd() {
+    const slot = document.getElementById("ad-slot");
+    slot.textContent = "Loading ad…";
+
+    try {
+      console.log("refreshAd: fetching /ads");
+      const res = await fetch("/ads", {
+        credentials: "include",
+      });
+
+      console.log("refreshAd: /ads status", res.status);
+
+      if (!res.ok) {
+        slot.textContent = "Failed to load ad (" + res.status + ")";
+        return;
       }
 
-      async function sendSearch(query) {
-        const debug = document.getElementById("debug");
-        const preds = document.getElementById("predicates");
-        try {
-          const res = await fetch("/api/events/search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ query }),
-          });
-          const data = await res.json();
-          debug.textContent = JSON.stringify(data, null, 2);
-          if (data.predicates) {
-            preds.textContent =
-              "Predicates: " + JSON.stringify(data.predicates);
-          }
-          await refreshAd();
-        } catch (e) {
-          console.error(e);
-          debug.textContent = "Error sending search.";
-        }
+      const data = await res.json();
+      console.log("Ad from /ads:", data);
+
+      if (!data.ok || !data.ad) {
+        slot.textContent = "No ad available.";
+        return;
       }
 
-      document
-        .getElementById("search-form")
-        .addEventListener("submit", (e) => {
-          e.preventDefault();
-          const q = document.getElementById("search-input").value.trim();
-          if (q) sendSearch(q);
-        });
+      const ad = data.ad;
 
-      // initial ad load
-      refreshAd();
-    </script>
+      slot.innerHTML = `
+        <div class="ad-card">
+          <a href="${ad.clickUrl}" target="_blank" rel="noopener noreferrer">
+            <img src="${ad.imageUrl}?v=${Date.now()}" alt="${ad.title}" />
+            <div class="ad-title">${ad.title}</div>
+          </a>
+        </div>
+      `;
+    } catch (err) {
+      console.error("refreshAd error:", err);
+      slot.textContent = "Error loading ad.";
+    }
+  }
+
+  async function sendSearch(query) {
+    const debug = document.getElementById("debug");
+    const preds = document.getElementById("predicates");
+
+    try {
+      const res = await fetch("/api/events/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ query }),
+      });
+
+      const data = await res.json();
+      debug.textContent = JSON.stringify(data, null, 2);
+
+      if (data.predicates) {
+        preds.textContent = "Predicates: " + JSON.stringify(data.predicates);
+      }
+
+      await refreshAd();
+    } catch (e) {
+      console.error("sendSearch error:", e);
+      debug.textContent = "Error sending search.";
+    }
+  }
+
+  document
+    .getElementById("search-form")
+    .addEventListener("submit", (e) => {
+      e.preventDefault();
+      const q = document.getElementById("search-input").value.trim();
+      if (q) sendSearch(q);
+    });
+
+  // initial ad load
+  refreshAd();
+</script>
+
   </body>
 </html>

@@ -1,25 +1,11 @@
-// backend/controllers/ads.js
 import { verifySession } from "../server/zkSession.js";
+import db from "../server/db.js";
 
-const ADS = {
-  generic: {
-    id: "generic",
-    title: "Welcome to ZK-City",
-    imageUrl: "/static/generic.jpg",
-    clickUrl: "https://example.com",
-  },
-  gaming18: {
-    id: "gaming-18",
-    title: "M-Rated Shooter",
-    imageUrl: "/static/game18.jpg",
-    clickUrl: "https://example.com/game18",
-  },
-  tech: {
-    id: "tech-deals",
-    title: "Insane Tech Deals",
-    imageUrl: "/static/tech.jpg",
-    clickUrl: "https://example.com/tech",
-  },
+const FALLBACK_AD = {
+  id: "generic",
+  title: "Welcome to ZK-City",
+  imageUrl: "/static/generic.jpg",
+  clickUrl: "https://example.com",
 };
 
 function getCookie(req, name) {
@@ -34,37 +20,55 @@ function getCookie(req, name) {
   return null;
 }
 
-// helper so it works even if predicates are "true"/1 instead of true
 const isTrue = (v) => v === true || v === "true" || v === 1 || v === "1";
+
+function matchesConditions(conditions, predicates) {
+  if (!conditions) return true;
+  return Object.entries(conditions).every(([key, required]) => {
+    if (required === undefined || required === null) return true;
+    const actual = predicates[key];
+    return isTrue(actual) === isTrue(required);
+  });
+}
 
 export function getAd(req, res) {
   const ttl = 60;
 
   const token = getCookie(req, "zk_session");
   let payload = null;
-
   if (token) {
     payload = verifySession(token);
   }
 
   const predicates = payload?.predicates || {};
 
-  let ad = ADS.generic;
+  const rows = db.prepare(
+    "SELECT * FROM campaigns WHERE active = 1"
+  ).all();
 
-  const age18 = isTrue(predicates.age18);
-  const gaming = isTrue(predicates.gaming);
-  const tech = isTrue(predicates.tech);
+  const eligible = [];
+  for (const row of rows) {
+    const conditions = JSON.parse(row.conditions_json || "{}");
+    if (matchesConditions(conditions, predicates)) {
+      eligible.push(row);
+    }
+  }
 
-  // 🎯 Priority:
-  // 1) Shooter only if age18 + gaming
-  // 2) Tech ad if tech true (and not gaming 18+)
-  // 3) Otherwise generic
-  if (age18 && gaming) {
-    ad = ADS.gaming18;
-  } else if (tech) {
-    ad = ADS.tech;
+  let selected = null;
+  if (eligible.length > 0) {
+    selected = eligible.reduce((a, b) => (a.bid >= b.bid ? a : b));
+  }
+
+  let ad;
+  if (selected) {
+    ad = {
+      id: selected.id,
+      title: selected.title,
+      imageUrl: selected.image_url,
+      clickUrl: selected.click_url,
+    };
   } else {
-    ad = ADS.generic;
+    ad = FALLBACK_AD;
   }
 
   res.json({
