@@ -1,7 +1,10 @@
-import { Router } from "express";
+// backend/routes/adsRoutes.js
+import express from "express";
 import { getAd } from "../controllers/ads.js";
-import { requireSession } from "../middleware/session.js";
 
-const router = Router();
-router.get("/", requireSession, getAd);  // GET /ads
+const router = express.Router();
+
+// because server.js mounts it at app.use("/ads", adsRoutes)
+router.get("/", getAd);
+
 export default router;

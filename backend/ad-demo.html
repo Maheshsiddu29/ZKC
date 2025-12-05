@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ZK Dynamic Ads Demo</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: #020617;
+        color: #e5e7eb;
+        padding: 24px;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+        margin-top: 16px;
+      }
+      .search-box input {
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid #4b5563;
+        background: #020617;
+        color: #f9fafb;
+        outline: none;
+      }
+      .search-box button {
+        margin-top: 8px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        border: none;
+        background: #22c55e;
+        color: #022c22;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .ad-card {
+        border-radius: 16px;
+        padding: 16px;
+        background: rgba(15, 23, 42, 0.95);
+        box-shadow: 0 20px 35px rgba(0, 0, 0, 0.4);
+        text-align: center;
+      }
+      .ad-card img {
+        max-width: 100%;
+        border-radius: 12px;
+        margin-bottom: 12px;
+      }
+      .ad-title {
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid #4b5563;
+        font-size: 0.75rem;
+      }
+      pre {
+        background: #020617;
+        border-radius: 8px;
+        padding: 8px;
+        border: 1px solid #1f2933;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ZK Dynamic Ad Demo</h1>
+    <p>Try searches like <code>gaming laptop</code> or <code>mechanical keyboard</code>.</p>
+
+    <form id="search-form" class="search-box">
+      <input id="search-input" type="text" placeholder="Search products..." />
+      <button type="submit">Search</button>
+    </form>
+
+    <div class="layout">
+      <div>
+        <h3>Server response</h3>
+        <pre id="debug"></pre>
+      </div>
+      <div>
+        <div id="predicates" class="pill">Predicates: none</div>
+        <div id="ad-slot" style="margin-top: 12px;">Loading ad…</div>
+      </div>
+    </div>
+
+    <script>
+      async function refreshAd() {
+        const slot = document.getElementById("ad-slot");
+        slot.textContent = "Loading ad…";
+        try {
+          const res = await fetch("/ads", {
+            credentials: "include",
+          });
+          if (!res.ok) {
+            slot.textContent = "Failed to load ad (" + res.status + ")";
+            return;
+          }
+          const data = await res.json();
+          if (!data.ok || !data.ad) {
+            slot.textContent = "No ad available.";
+            return;
+          }
+          const ad = data.ad;
+          slot.innerHTML = `
+            <div class="ad-card">
+              <a href="${ad.clickUrl}" target="_blank" rel="noopener noreferrer">
+                <img src="${ad.imageUrl}" alt="${ad.title}" />
+                <div class="ad-title">${ad.title}</div>
+              </a>
+            </div>
+          `;
+        } catch (err) {
+          console.error(err);
+          slot.textContent = "Error loading ad.";
+        }
+      }
+
+      async function sendSearch(query) {
+        const debug = document.getElementById("debug");
+        const preds = document.getElementById("predicates");
+        try {
+          const res = await fetch("/api/events/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ query }),
+          });
+          const data = await res.json();
+          debug.textContent = JSON.stringify(data, null, 2);
+          if (data.predicates) {
+            preds.textContent =
+              "Predicates: " + JSON.stringify(data.predicates);
+          }
+          await refreshAd();
+        } catch (e) {
+          console.error(e);
+          debug.textContent = "Error sending search.";
+        }
+      }
+
+      document
+        .getElementById("search-form")
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          const q = document.getElementById("search-input").value.trim();
+          if (q) sendSearch(q);
+        });
+
+      // initial ad load
+      refreshAd();
+    </script>
+  </body>
+</html>
