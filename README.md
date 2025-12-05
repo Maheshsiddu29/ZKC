@@ -263,177 +263,16 @@ This installs:
 * Express / HTTP server code
 * Any middleware (cookies, JWT, etc.)
 * Frontend assets for the demo page
+* sqllite and all the required packages
 
 ---
 
-## 12) Environment variables
+## 12) Run the server 
 
-Copy the example env (if present) and set your secrets:
+Go root ZKC folder path and Run this command
+node backend/server.js
 
-```bash
-cp .env.example .env
-```
-
-Then edit `.env` and set at minimum:
-
-* `PORT=4000` (or any free port)
-* `SESSION_SECRET=some-long-random-string` – used to sign the `zk_session` cookie
-* Any other keys your server uses for signing/verifying sessions
-
-> If you don’t see `.env.example`, ask the repo owner (Mahesh) or check `src/config` / `src/server.ts` to see what env vars are read.
-
----
-
-## 13) Make sure proving keys exist
-
-The server expects the proof setup artifacts from **Part 1**:
-
-Required files (by default):
-
-* `build/cookie_final.zkey`
-* `build/cookie_verification_key.json`
-
-If they don’t exist yet, run:
-
-```bash
-bash scripts/bootstrap_circuits.sh
-# or follow Steps 4–7 above
-```
-
----
-
-## 14) Start the server
-
-From the project root:
-
-```bash
-# dev mode
-npm run dev
-
-# or, if your package.json uses a different script:
-# npm start
-```
-
-You should see something like:
-
-```text
-[server] listening on http://localhost:4000
-```
-
----
-
-## 15) Open the demo UI in your browser
-
-Go to:
-
-```text
-http://localhost:4000/
-```
-
-You’ll see a simple demo interface with:
-
-1. **ZK Session / User Info panel**
-
-   * Fill in DOB / year-of-birth, interests (e.g., “Tech / Gaming”) and any other fields the demo exposes.
-   * Click the button to **Generate proof & verify**.
-   * On success, the backend:
-
-     * Verifies your Groth16 proof.
-     * Mints a signed `zk_session` token.
-     * Sets an HttpOnly cookie: **`zk_session`** containing predicates like `predTech`, `predAge18`, `origin`, etc.
-
-2. **Ad / Products panel**
-
-   * An input where you can **type product searches** (e.g., `gaming mouse`, `RTX 4090`, `shoes`, `lipstick`).
-   * A container that displays the **ad creative** returned by `/ads`.
-
----
-
-## 16) How product typing → ads works (high level)
-
-### Frontend (browser)
-
-* You type something like:
-
-  ```text
-  "gaming laptop"
-  ```
-
-* Frontend maps that to a coarse **category** (`tech`, `fashion`, etc.).
-
-* It sends a request to the server:
-
-  ```http
-  GET /ads?category=tech
-  Cookie: zk_session=<automatically sent by browser>
-  ```
-
-You **do not** manually pass the session anywhere: the browser sends the `zk_session` cookie automatically once it’s set.
-
-### Backend (server)
-
-* Auth middleware parses `zk_session`:
-
-  * Verifies signature and expiry.
-  * Extracts predicates: `predTech`, `predAge18`, `origin`, etc.
-* `/ads` endpoint:
-
-  * Reads `req.zk.predicates` and the query (e.g., `category=tech`).
-  * If `predTech == 1`, it returns a **tech ad**.
-  * If not, it might return a generic ad or a different category.
-
-Response example (JSON):
-
-```json
-{
-  "slot": "main",
-  "creative": "🔥 Gaming Gear Sale – 30% off keyboards & mice",
-  "category": "tech",
-  "matchedPredicate": "predTech"
-}
-```
-
-The frontend then renders that **creative** into the ad slot on the page.
-
----
-
-## 17) Testing with curl (optional, power users)
-
-You can also hit `/ads` directly with `curl` if you already have a session string.
-
-1. Get a `session` string from your `/zkp/verify` endpoint (or from server logs if you’re in dev).
-2. Export it:
-
-```bash
-export SESSION='<paste-the-session-string-here>'
-```
-
-3. Call `/ads`:
-
-```bash
-curl -i -H "Cookie: zk_session=$SESSION" "http://localhost:4000/ads?category=tech"
-```
-
-You should see a JSON ad response based on your predicates.
-
----
-
-## 18) Common server issues
-
-* **`Error: build/cookie_final.zkey not found`**
-  → Run `bash scripts/bootstrap_circuits.sh` or redo setup in Part 1.
-
-* **`jwt malformed` / `invalid signature` (or similar)**
-  → Make sure you’re using a consistent `SESSION_SECRET` and haven’t manually edited the cookie.
-
-* **Browser shows no ad even after typing product**
-
-  * Check browser devtools → Network → `/ads`
-  * Confirm:
-
-    * Request includes `Cookie: zk_session=...`
-    * Response is `200 OK` with ad JSON.
-  * If cookie is missing, ensure the proof step actually set `Set-Cookie: zk_session=...`.
+and click on the http://localhost:4000 link , this should redirect you to our demo page
 
 ---
 
@@ -452,6 +291,4 @@ git checkout ZKC-ad-display
 
 ```
 
-If you want, I can also add a tiny ASCII diagram showing the flow: **browser → proof → zk_session → /ads → ad creative** and drop it into the README.
-::contentReference[oaicite:0]{index=0}
-```
+
