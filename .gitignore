@@ -17,3 +17,4 @@ public.json
 
 # Secrets/config
 .env
+circom/

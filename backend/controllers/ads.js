@@ -8,6 +8,7 @@ const FALLBACK_AD = {
   clickUrl: "https://example.com",
 };
 
+// ---- Utility cookie reader ----
 function getCookie(req, name) {
   const header = req.headers.cookie;
   if (!header) return null;
@@ -25,26 +26,78 @@ const isTrue = (v) => v === true || v === "true" || v === 1 || v === "1";
 function matchesConditions(conditions, predicates) {
   if (!conditions) return true;
   return Object.entries(conditions).every(([key, required]) => {
-    if (required === undefined || required === null) return true;
+    if (required == null) return true;
     const actual = predicates[key];
     return isTrue(actual) === isTrue(required);
   });
 }
 
+// ---- NEW: simple ad matching for search queries ----
+function getAdForSearch(q) {
+  if (!q) return null;
+
+  const text = q.toLowerCase();
+
+  if (text.includes("laptop") || text.includes("tech") || text.includes("computer")) {
+    return {
+      id: "tech",
+      title: "Latest Laptops & Electronics",
+      imageUrl: "/static/tech.jpg",
+      clickUrl: "https://amazon.com/laptops"
+    };
+  }
+
+  if (text.includes("game") || text.includes("controller") || text.includes("ps5")) {
+    return {
+      id: "game",
+      title: "Top Gaming Gear Deals",
+      imageUrl: "/static/game18.jpg",
+      clickUrl: "https://amazon.com/gaming"
+    };
+  }
+
+  if (text.includes("women") || text.includes("shoes") || text.includes("heels") || text.includes("fashion")) {
+    return {
+      id: "fashion",
+      title: "Trending Women's Fashion",
+      imageUrl: "/static/generic.jpg",   // replace with fashion.jpg if you add one
+      clickUrl: "https://amazon.com/fashion"
+    };
+  }
+
+  // no match → allow ZK personalization or fallback
+  return null;
+}
+
+// ---- MAIN AD ROUTE ----
 export function getAd(req, res) {
   const ttl = 60;
 
+  // 1) Handle search query first (simple mode)
+  const q = req.query.q || "";
+  const searchAd = getAdForSearch(q);
+  
+  if (searchAd) {
+    return res.json({
+      ok: true,
+      ad: searchAd,
+      ttl
+    });
+  }
+
+  // 2) If no search query matched → use ZK predicate ads
+
   const token = getCookie(req, "zk_session");
   let payload = null;
+  
   if (token) {
     payload = verifySession(token);
   }
 
   const predicates = payload?.predicates || {};
 
-  const rows = db.prepare(
-    "SELECT * FROM campaigns WHERE active = 1"
-  ).all();
+  // Read all active campaigns
+  const rows = db.prepare("SELECT * FROM campaigns WHERE active = 1").all();
 
   const eligible = [];
   for (const row of rows) {
@@ -59,21 +112,16 @@ export function getAd(req, res) {
     selected = eligible.reduce((a, b) => (a.bid >= b.bid ? a : b));
   }
 
-  let ad;
-  if (selected) {
-    ad = {
-      id: selected.id,
-      title: selected.title,
-      imageUrl: selected.image_url,
-      clickUrl: selected.click_url,
-    };
-  } else {
-    ad = FALLBACK_AD;
-  }
+  const ad = selected ? {
+    id: selected.id,
+    title: selected.title,
+    imageUrl: selected.image_url,
+    clickUrl: selected.click_url
+  } : FALLBACK_AD;
 
-  res.json({
+  return res.json({
     ok: true,
     ad,
-    ttl,
+    ttl
   });
 }

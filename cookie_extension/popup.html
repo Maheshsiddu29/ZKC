@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ZK Dynamic Ad Demo</title>
+  <style>
+    body { font-family: Arial; padding: 10px; width: 350px; background: #000; color: #fff; }
+    input, button { width: 100%; padding: 8px; margin: 6px 0; }
+    button { background: #00cc66; border: none; color: #000; font-weight: bold; cursor: pointer; }
+    #adBox { margin-top: 10px; min-height: 120px; background: #111; padding: 10px; }
+    #responseBox { margin-top: 10px; white-space: pre-wrap; background: #111; padding: 10px; }
+  </style>
+</head>
+<body>
+
+  <h2>ZK Dynamic Ad Demo</h2>
+
+  <!-- Search -->
+  <h3>Search products</h3>
+  <input id="searchInput" placeholder="Search products (e.g., laptop, shoes)">
+  <button id="searchBtn">Search</button>
+
+  <!-- ZK Setup -->
+  <h3>Year of Birth</h3>
+  <input id="yobInput" type="number" value="2002">
+
+  <label><input type="checkbox" id="techBox"> Tech enthusiast</label><br>
+  <label><input type="checkbox" id="gamerBox"> Gamer</label>
+
+  <button id="zkBtn">Run ZK Setup</button>
+
+  <!-- Current Ad -->
+  <h3>Current Ad</h3>
+  <div id="adBox">Ad will appear here</div>
+  <a id="advLink" href="#" target="_blank">Visit advertiser</a>
+
+  <!-- Server response -->
+  <h3>Server Response</h3>
+  <div id="responseBox">Waiting...</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
