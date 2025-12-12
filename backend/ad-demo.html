@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>ZK Dynamic Ad Demo</title>
+    <title>ZKC Demo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       :root {
@@ -15,8 +15,8 @@
         margin: 0;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
           sans-serif;
-        background: #020617;
-        color: #f9fafb;
+        background: #e6eaf8;
+        color: #1581ed;
       }
       .page {
         max-width: 1200px;
@@ -90,7 +90,8 @@
         font-size: 0.9rem;
         outline: none;
       }
-      input[type="text"]::placeholder {
+      input[type="text"]::placeholder,
+      input[type="number"]::placeholder {
         color: #6b7280;
       }
       button {
@@ -161,13 +162,6 @@
         margin: 0;
         font-size: 0.95rem;
       }
-      .pred-pill {
-        composes: pill;
-      }
-      .pred-pill span {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-          "Liberation Mono", "Courier New", monospace;
-      }
       .ad-box {
         border-radius: 14px;
         background: radial-gradient(circle at top, #0b1220, #020617 70%);
@@ -226,39 +220,39 @@
       <header>
         <h1>ZK Dynamic Ad Demo</h1>
         <p class="subtitle">
-          Try searches like <code>gaming laptop</code> or
-          <code>mechanical keyboard</code>. The right card shows the ad selected
-          using the <code>zk_session</code> cookie.
+          Left: simulate a search query. Right: ad engine selects from your
+          product DB using the ZK cookie (<code>zk_session</code>) and the
+          query.
         </p>
       </header>
 
       <div class="layout">
-        <!-- LEFT: Controls + server response -->
+        <!-- LEFT: Controls + server responses -->
         <div class="card">
           <h2>Controls</h2>
           <p>
-            Top: a normal search-based cookie flow. Bottom: a ZK cookie flow
-            that replicates your <code>run_proof_client.mjs</code> in the
-            browser.
+            Top: classic search that updates "context". Bottom: ZK flow that
+            proves attributes and sets <code>zk_session</code> without revealing
+            raw data.
           </p>
 
           <div class="row-2">
-            <!-- Search form → /api/events/search -->
+            <!-- Search box -->
             <div class="search-box">
-              <label for="search-input">Search products (classic cookie)</label>
+              <label for="search-input">Search products (context for ads)</label>
               <input
                 id="search-input"
                 type="text"
-                placeholder="gaming laptop, mouse, mechanical keyboard..."
+                placeholder="portable fan, massage gun, keyboard, etc."
               />
               <button id="search-btn" type="button">Search</button>
             </div>
 
-            <!-- ZKP setup form → /zkp/challenge + /zkp/verify -->
+            <!-- ZKP setup -->
             <div class="zkp-box">
               <div style="display: flex; align-items: center; gap: 6px">
                 <label for="dob-year">ZK cookie setup</label>
-                <span class="badge">uses groth16 proof</span>
+                <span class="badge">Groth16 proof</span>
               </div>
               <input
                 id="dob-year"
@@ -270,11 +264,11 @@
               <div class="checkbox-row">
                 <label>
                   <input id="interest-tech" type="checkbox" />
-                  Tech enthusiast
+                  Tech interest
                 </label>
                 <label>
                   <input id="interest-gaming" type="checkbox" />
-                  Gamer
+                  Gaming interest
                 </label>
               </div>
               <button id="zkp-btn" type="button" class="secondary">
@@ -284,10 +278,10 @@
           </div>
 
           <h2 style="margin-top: 18px">Server response</h2>
-          <pre id="debug">Loading…</pre>
+          <pre id="debug">Ready.</pre>
         </div>
 
-        <!-- RIGHT: Ad + predicates -->
+        <!-- RIGHT: Ad display -->
         <div class="card">
           <div class="ad-header">
             <h2>Current ad</h2>
@@ -299,7 +293,7 @@
           <div class="ad-box">
             <div id="ad-box" class="ad-inner">
               <p style="font-size: 0.85rem; color: #9ca3af">
-                Loading ad…
+                No ad yet. Run ZK setup and/or search to see ads from the DB.
               </p>
             </div>
           </div>
@@ -307,16 +301,16 @@
       </div>
     </div>
 
-    <!-- snarkjs browser bundle -->
+    <!-- snarkjs bundle served as /zkp-lib/snarkjs.min.js -->
     <script src="/zkp-lib/snarkjs.min.js"></script>
     <script>
-      // === Helpers ===
       const { groth16 } = snarkjs;
 
-      // Same FIELD_P and hexToFieldDec as in run_proof_client.mjs
+      // Field modulus from bn128
       const FIELD_P = BigInt(
         "21888242871839275222246405745257275088548364400416034343698204186575808495617"
       );
+
       function hexToFieldDec(hex) {
         return (BigInt("0x" + hex) % FIELD_P).toString();
       }
@@ -339,7 +333,7 @@
       }
 
       function packInterests({ tech, gaming }) {
-        // Simple demo mapping:
+        // simple bit packing:
         // bit 0 = gaming, bit 1 = tech
         let v = 0;
         if (gaming) v |= 1 << 0;
@@ -347,10 +341,17 @@
         return v;
       }
 
+      let lastQuery = "";
+      let slideshowTimer = null;
+
       // === /ads ===
-      async function refreshAd() {
+       async function refreshAd() {
         try {
-          const res = await fetch("/ads", {
+          const url = lastQuery
+            ? `/ads?query=${encodeURIComponent(lastQuery)}`
+            : "/ads";
+
+          const res = await fetch(url, {
             method: "GET",
             credentials: "include",
           });
@@ -358,26 +359,51 @@
           console.log("Ads response:", data);
 
           const box = document.getElementById("ad-box");
-          if (!data.ok || !data.ad) {
+
+          const ads = Array.isArray(data.ads) && data.ads.length
+            ? data.ads
+            : data.ad
+            ? [data.ad]
+            : [];
+
+          if (!ads.length) {
             box.innerHTML =
               '<p style="font-size:0.85rem;color:#9ca3af">No eligible ad. Showing fallback.</p>';
             return;
           }
 
-          const ad = data.ad;
-          box.innerHTML = `
-            <div class="ad-inner">
-              ${
-                ad.imageUrl
-                  ? `<img src="${ad.imageUrl}" alt="${ad.title}" />`
-                  : ""
-              }
-              <div class="ad-title">${ad.title}</div>
-              <a class="ad-link" href="${ad.clickUrl}" target="_blank" rel="noopener noreferrer">
-                Visit advertiser →
-              </a>
-            </div>
-          `;
+          let idx = 0;
+
+          function renderCurrent() {
+            const ad = ads[idx];
+            box.innerHTML = `
+              <div class="ad-inner">
+                ${
+                  ad.imageUrl
+                    ? `<img src="${ad.imageUrl}" alt="${ad.title}" />`
+                    : ""
+                }
+                <div class="ad-title">${ad.title}</div>
+                <a class="ad-link" href="${ad.clickUrl}" target="_blank" rel="noopener noreferrer">
+                  Visit advertiser →
+                </a>
+              </div>
+            `;
+          }
+
+          // render first ad immediately
+          renderCurrent();
+
+          // clear previous slideshow (if any)
+          if (slideshowTimer) clearInterval(slideshowTimer);
+
+          // rotate if multiple ads
+          if (ads.length > 1) {
+            slideshowTimer = setInterval(() => {
+              idx = (idx + 1) % ads.length;
+              renderCurrent();
+            }, 2000); // 2 seconds per product
+          }
         } catch (e) {
           console.error("refreshAd error:", e);
           document.getElementById("ad-box").innerHTML =
@@ -385,13 +411,15 @@
         }
       }
 
-      // === Classic search flow → /api/events/search → /ads ===
+      // === Classic search flow → /api/events/search ===
       async function handleSearch() {
         const q = document.getElementById("search-input").value || "";
         if (!q.trim()) {
           alert("Type a search query first.");
           return;
         }
+
+        lastQuery = q;
 
         try {
           const res = await fetch("/api/events/search", {
@@ -403,9 +431,7 @@
           const data = await res.json();
           console.log("Search response:", data);
           setDebug(data);
-          if (data.predicates) {
-            setPredicates(data.predicates);
-          }
+          // Do NOT override predicates pill here; that should reflect ZK flow.
           await refreshAd();
         } catch (e) {
           console.error("search error:", e);
@@ -427,10 +453,10 @@
         const gaming = document.getElementById("interest-gaming").checked;
 
         try {
-          // 1) Get challenge
           const host = window.location.host;
-          const mask = 5; // same mask as your CLI demo
+          const mask = 5; // same mask you use in backend/client script
 
+          // 1) get challenge
           const challRes = await fetch(
             `/zkp/challenge?host=${encodeURIComponent(host)}&mask=${mask}`
           );
@@ -445,10 +471,10 @@
 
           const nonceField = hexToFieldDec(chall.nonce);
 
-          // 2) Build circuit input (same fields as run_proof_client.mjs)
+          // 2) build circuit input (mirrors run_proof_client.mjs)
           const interestsPacked = packInterests({ tech, gaming });
           const consentVer = 1;
-          const salt_user = "987654321"; // demo constant
+          const salt_user = "987654321";
 
           const input = {
             nonce_input: nonceField,
@@ -456,7 +482,7 @@
             origin_id: chall.origin_id,
             nowYear: chall.nowYear,
             catMask: chall.catMask,
-            dobYear: dobYear,
+            dobYear,
             interestsPacked,
             consentVer,
             salt_user,
@@ -464,15 +490,16 @@
 
           console.log("Circuit input:", input);
 
-          // 3) Generate proof in-browser
+          // 3) generate proof in-browser
           const { proof, publicSignals } = await groth16.fullProve(
             input,
             "/zkp-static/cookie_js/cookie.wasm",
             "/zkp-static/cookie_final.zkey"
           );
+
           console.log("publicSignals:", publicSignals);
 
-          // 4) POST to /zkp/verify (sets zk_session cookie)
+          // 4) send to /zkp/verify (sets zk_session cookie)
           const verifyRes = await fetch("/zkp/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -492,7 +519,7 @@
             setPredicates(verifyData.predicates);
           }
 
-          // zk_session is now set by postVerify; refresh ad
+          // zk_session is now set; refresh ad for whatever lastQuery is
           await refreshAd();
         } catch (e) {
           console.error("ZK setup error:", e);
@@ -500,7 +527,7 @@
         }
       }
 
-      // === Wire up events ===
+      // Wire up events
       document
         .getElementById("search-btn")
         .addEventListener("click", (e) => {
@@ -513,7 +540,7 @@
         handleZkSetup();
       });
 
-      // Initial ad load
+      // Initial ad load (no query, no zk_session -> fallback/generic)
       refreshAd().catch(console.error);
     </script>
   </body>
