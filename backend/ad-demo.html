@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ZKC Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          sans-serif;
+        background: #e6eaf8;
+        color: #1581ed;
+      }
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px 20px 40px;
+      }
+      h1 {
+        font-size: 1.8rem;
+        margin: 0 0 4px;
+      }
+      .subtitle {
+        font-size: 0.9rem;
+        color: #9ca3af;
+        margin-bottom: 24px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.12);
+        font-size: 0.75rem;
+        color: #e5e7eb;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+        gap: 24px;
+        align-items: flex-start;
+      }
+      .card {
+        background: radial-gradient(circle at top left, #0f172a, #020617 60%);
+        border-radius: 18px;
+        padding: 18px 18px 16px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
+      }
+      .card h2 {
+        font-size: 1rem;
+        margin: 0 0 8px;
+      }
+      .card p {
+        font-size: 0.84rem;
+        color: #9ca3af;
+        margin: 0 0 12px;
+      }
+      .row-2 {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.1fr);
+        gap: 16px;
+        margin-top: 18px;
+      }
+      .search-box,
+      .zkp-box {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      label {
+        font-size: 0.85rem;
+        color: #e5e7eb;
+      }
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        background: rgba(15, 23, 42, 0.95);
+        color: #f9fafb;
+        font-size: 0.9rem;
+        outline: none;
+      }
+      input[type="text"]::placeholder,
+      input[type="number"]::placeholder {
+        color: #6b7280;
+      }
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 8px 18px;
+        font-size: 0.86rem;
+        font-weight: 500;
+        cursor: pointer;
+        background: #22c55e;
+        color: #022c22;
+        align-self: flex-start;
+        transition: transform 0.08s ease, box-shadow 0.08s ease,
+          background 0.08s ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 25px rgba(34, 197, 94, 0.35);
+        background: #16a34a;
+      }
+      button.secondary {
+        background: transparent;
+        color: #e5e7eb;
+        border: 1px solid rgba(148, 163, 184, 0.6);
+        box-shadow: none;
+      }
+      button.secondary:hover {
+        background: rgba(15, 23, 42, 0.9);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.9);
+      }
+      .checkbox-row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 0.8rem;
+        color: #cbd5f5;
+      }
+      .checkbox-row label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+      }
+      .checkbox-row input[type="checkbox"] {
+        accent-color: #22c55e;
+      }
+      pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 0.78rem;
+        background: rgba(15, 23, 42, 0.9);
+        border-radius: 12px;
+        padding: 10px 12px;
+        margin: 10px 0 0;
+        border: 1px solid rgba(51, 65, 85, 0.9);
+        max-height: 260px;
+        overflow: auto;
+      }
+      .ad-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .ad-header h2 {
+        margin: 0;
+        font-size: 0.95rem;
+      }
+      .ad-box {
+        border-radius: 14px;
+        background: radial-gradient(circle at top, #0b1220, #020617 70%);
+        border: 1px solid rgba(55, 65, 81, 0.9);
+        padding: 10px;
+        min-height: 190px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ad-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+      }
+      .ad-inner img {
+        display: block;
+        max-width: 100%;
+        border-radius: 12px;
+      }
+      .ad-title {
+        font-size: 0.98rem;
+        font-weight: 600;
+      }
+      .ad-link {
+        font-size: 0.8rem;
+        color: #38bdf8;
+        text-decoration: none;
+      }
+      .ad-link:hover {
+        text-decoration: underline;
+      }
+      .badge {
+        display: inline-flex;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(94, 234, 212, 0.5);
+        color: #a5b4fc;
+        font-size: 0.7rem;
+        margin-left: 6px;
+      }
+
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .row-2 {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <h1>ZK Dynamic Ad Demo</h1>
+        <p class="subtitle">
+          Left: simulate a search query. Right: ad engine selects from your
+          product DB using the ZK cookie (<code>zk_session</code>) and the
+          query.
+        </p>
+      </header>
+
+      <div class="layout">
+        <!-- LEFT: Controls + server responses -->
+        <div class="card">
+          <h2>Controls</h2>
+          <p>
+            Top: classic search that updates "context". Bottom: ZK flow that
+            proves attributes and sets <code>zk_session</code> without revealing
+            raw data.
+          </p>
+
+          <div class="row-2">
+            <!-- Search box -->
+            <div class="search-box">
+              <label for="search-input">Search products (context for ads)</label>
+              <input
+                id="search-input"
+                type="text"
+                placeholder="portable fan, massage gun, keyboard, etc."
+              />
+              <button id="search-btn" type="button">Search</button>
+            </div>
+
+            <!-- ZKP setup -->
+            <div class="zkp-box">
+              <div style="display: flex; align-items: center; gap: 6px">
+                <label for="dob-year">ZK cookie setup</label>
+                <span class="badge">Groth16 proof</span>
+              </div>
+              <input
+                id="dob-year"
+                type="number"
+                min="1900"
+                max="2025"
+                placeholder="Year of birth (e.g. 2001)"
+              />
+              <div class="checkbox-row">
+                <label>
+                  <input id="interest-tech" type="checkbox" />
+                  Tech interest
+                </label>
+                <label>
+                  <input id="interest-gaming" type="checkbox" />
+                  Gaming interest
+                </label>
+              </div>
+              <button id="zkp-btn" type="button" class="secondary">
+                Run ZK setup
+              </button>
+            </div>
+          </div>
+
+          <h2 style="margin-top: 18px">Server response</h2>
+          <pre id="debug">Ready.</pre>
+        </div>
+
+        <!-- RIGHT: Ad display -->
+        <div class="card">
+          <div class="ad-header">
+            <h2>Current ad</h2>
+            <div class="pill">
+              Predicates:
+              <span id="predicates" style="margin-left: 6px">none</span>
+            </div>
+          </div>
+          <div class="ad-box">
+            <div id="ad-box" class="ad-inner">
+              <p style="font-size: 0.85rem; color: #9ca3af">
+                No ad yet. Run ZK setup and/or search to see ads from the DB.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- snarkjs bundle served as /zkp-lib/snarkjs.min.js -->
+    <script src="/zkp-lib/snarkjs.min.js"></script>
+    <script>
+      const { groth16 } = snarkjs;
+
+      // Field modulus from bn128
+      const FIELD_P = BigInt(
+        "21888242871839275222246405745257275088548364400416034343698204186575808495617"
+      );
+
+      function hexToFieldDec(hex) {
+        return (BigInt("0x" + hex) % FIELD_P).toString();
+      }
+
+      function setDebug(data) {
+        const dbg = document.getElementById("debug");
+        dbg.textContent =
+          typeof data === "string"
+            ? data
+            : JSON.stringify(data, null, 2);
+      }
+
+      function setPredicates(pred) {
+        const elem = document.getElementById("predicates");
+        if (!pred) {
+          elem.textContent = "none";
+          return;
+        }
+        elem.textContent = JSON.stringify(pred);
+      }
+
+      function packInterests({ tech, gaming }) {
+        // simple bit packing:
+        // bit 0 = gaming, bit 1 = tech
+        let v = 0;
+        if (gaming) v |= 1 << 0;
+        if (tech) v |= 1 << 1;
+        return v;
+      }
+
+      let lastQuery = "";
+      let slideshowTimer = null;
+
+      // === /ads ===
+       async function refreshAd() {
+        try {
+          const url = lastQuery
+            ? `/ads?query=${encodeURIComponent(lastQuery)}`
+            : "/ads";
+
+          const res = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+          });
+          const data = await res.json();
+          console.log("Ads response:", data);
+
+          const box = document.getElementById("ad-box");
+
+          const ads = Array.isArray(data.ads) && data.ads.length
+            ? data.ads
+            : data.ad
+            ? [data.ad]
+            : [];
+
+          if (!ads.length) {
+            box.innerHTML =
+              '<p style="font-size:0.85rem;color:#9ca3af">No eligible ad. Showing fallback.</p>';
+            return;
+          }
+
+          let idx = 0;
+
+          function renderCurrent() {
+            const ad = ads[idx];
+            box.innerHTML = `
+              <div class="ad-inner">
+                ${
+                  ad.imageUrl
+                    ? `<img src="${ad.imageUrl}" alt="${ad.title}" />`
+                    : ""
+                }
+                <div class="ad-title">${ad.title}</div>
+                <a class="ad-link" href="${ad.clickUrl}" target="_blank" rel="noopener noreferrer">
+                  Visit advertiser →
+                </a>
+              </div>
+            `;
+          }
+
+          // render first ad immediately
+          renderCurrent();
+
+          // clear previous slideshow (if any)
+          if (slideshowTimer) clearInterval(slideshowTimer);
+
+          // rotate if multiple ads
+          if (ads.length > 1) {
+            slideshowTimer = setInterval(() => {
+              idx = (idx + 1) % ads.length;
+              renderCurrent();
+            }, 2000); // 2 seconds per product
+          }
+        } catch (e) {
+          console.error("refreshAd error:", e);
+          document.getElementById("ad-box").innerHTML =
+            '<p style="font-size:0.85rem;color:#f97373">Failed to load ad.</p>';
+        }
+      }
+
+      // === Classic search flow → /api/events/search ===
+      async function handleSearch() {
+        const q = document.getElementById("search-input").value || "";
+        if (!q.trim()) {
+          alert("Type a search query first.");
+          return;
+        }
+
+        lastQuery = q;
+
+        try {
+          const res = await fetch("/api/events/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ query: q }),
+          });
+          const data = await res.json();
+          console.log("Search response:", data);
+          setDebug(data);
+          // Do NOT override predicates pill here; that should reflect ZK flow.
+          await refreshAd();
+        } catch (e) {
+          console.error("search error:", e);
+          setDebug("Search error: " + e.message);
+        }
+      }
+
+      // === ZK flow → /zkp/challenge + groth16.fullProve + /zkp/verify ===
+      async function handleZkSetup() {
+        const dobYear = Number(
+          document.getElementById("dob-year").value || "0"
+        );
+        if (!dobYear) {
+          alert("Enter year of birth for the ZK proof.");
+          return;
+        }
+
+        const tech = document.getElementById("interest-tech").checked;
+        const gaming = document.getElementById("interest-gaming").checked;
+
+        try {
+          const host = window.location.host;
+          const mask = 5; // same mask you use in backend/client script
+
+          // 1) get challenge
+          const challRes = await fetch(
+            `/zkp/challenge?host=${encodeURIComponent(host)}&mask=${mask}`
+          );
+          const chall = await challRes.json();
+          console.log("Challenge:", chall);
+
+          if (!chall.ok) {
+            setDebug(chall);
+            alert("Challenge error: " + chall.error);
+            return;
+          }
+
+          const nonceField = hexToFieldDec(chall.nonce);
+
+          // 2) build circuit input (mirrors run_proof_client.mjs)
+          const interestsPacked = packInterests({ tech, gaming });
+          const consentVer = 1;
+          const salt_user = "987654321";
+
+          const input = {
+            nonce_input: nonceField,
+            nonce_int: nonceField,
+            origin_id: chall.origin_id,
+            nowYear: chall.nowYear,
+            catMask: chall.catMask,
+            dobYear,
+            interestsPacked,
+            consentVer,
+            salt_user,
+          };
+
+          console.log("Circuit input:", input);
+
+          // 3) generate proof in-browser
+          const { proof, publicSignals } = await groth16.fullProve(
+            input,
+            "/zkp-static/cookie_js/cookie.wasm",
+            "/zkp-static/cookie_final.zkey"
+          );
+
+          console.log("publicSignals:", publicSignals);
+
+          // 4) send to /zkp/verify (sets zk_session cookie)
+          const verifyRes = await fetch("/zkp/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ proof, publicSignals }),
+          });
+          const verifyData = await verifyRes.json();
+          console.log("ZK verify response:", verifyData);
+          setDebug(verifyData);
+
+          if (!verifyData.ok) {
+            alert("ZK verify failed: " + (verifyData.error || "unknown"));
+            return;
+          }
+
+          if (verifyData.predicates) {
+            setPredicates(verifyData.predicates);
+          }
+
+          // zk_session is now set; refresh ad for whatever lastQuery is
+          await refreshAd();
+        } catch (e) {
+          console.error("ZK setup error:", e);
+          setDebug("ZK setup error: " + e.message);
+        }
+      }
+
+      // Wire up events
+      document
+        .getElementById("search-btn")
+        .addEventListener("click", (e) => {
+          e.preventDefault();
+          handleSearch();
+        });
+
+      document.getElementById("zkp-btn").addEventListener("click", (e) => {
+        e.preventDefault();
+        handleZkSetup();
+      });
+
+      // Initial ad load (no query, no zk_session -> fallback/generic)
+      refreshAd().catch(console.error);
+    </script>
+  </body>
+</html>
