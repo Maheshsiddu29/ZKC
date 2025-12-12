@@ -450,52 +450,59 @@
         }
 
         const tech = document.getElementById("interest-tech").checked;
-        const gaming = document.getElementById("interest-gaming").checked;
+const gaming = document.getElementById("interest-gaming").checked;
 
-        try {
-          const host = window.location.host;
-          const mask = 5; // same mask you use in backend/client script
+try {
+  const host = window.location.host;
+  const mask = 5;
 
-          // 1) get challenge
-          const challRes = await fetch(
-            `/zkp/challenge?host=${encodeURIComponent(host)}&mask=${mask}`
-          );
-          const chall = await challRes.json();
-          console.log("Challenge:", chall);
+  const challRes = await fetch(
+    `/zkp/challenge?host=${encodeURIComponent(host)}&mask=${mask}`
+  );
+  const chall = await challRes.json();
+  console.log("Challenge:", chall);
 
-          if (!chall.ok) {
-            setDebug(chall);
-            alert("Challenge error: " + chall.error);
-            return;
-          }
+  if (!chall.ok) {
+    setDebug(chall);
+    alert("Challenge error: " + chall.error);
+    return;
+  }
 
-          const nonceField = hexToFieldDec(chall.nonce);
+  const nonceField = hexToFieldDec(chall.nonce);
 
-          // 2) build circuit input (mirrors run_proof_client.mjs)
-          const interestsPacked = packInterests({ tech, gaming });
-          const consentVer = 1;
-          const salt_user = "987654321";
+  const interestsPacked = packInterests({ tech, gaming });
+  const consentVer = 1;
+  const salt_user = "987654321";
 
-          const input = {
-            nonce_input: nonceField,
-            nonce_int: nonceField,
-            origin_id: chall.origin_id,
-            nowYear: chall.nowYear,
-            catMask: chall.catMask,
-            dobYear,
-            interestsPacked,
-            consentVer,
-            salt_user,
-          };
+  const input = {
+    nonce_input: nonceField,
+    nonce_int: nonceField,
+    origin_id: chall.origin_id,
+    nowYear: chall.nowYear,
+    catMask: chall.catMask,
+    dobYear,
+    interestsPacked,
+    consentVer,
+    salt_user,
 
-          console.log("Circuit input:", input);
+    int_home_kitchen: 0,
+    int_personal_care: 0,
+    int_beauty: 0,
+    int_fitness: gaming ? 1 : 0,
+    int_gadgets: tech ? 1 : 0,
 
-          // 3) generate proof in-browser
-          const { proof, publicSignals } = await groth16.fullProve(
-            input,
-            "/zkp-static/cookie_js/cookie.wasm",
-            "/zkp-static/cookie_final.zkey"
-          );
+    hi_intent_recent: 0,
+    cart_abandoner: 0,
+    recent_buyer: 0,
+  };
+
+  console.log("Circuit input:", input);
+
+  const { proof, publicSignals } = await groth16.fullProve(
+    input,
+    "/zkp-static/cookie_js/cookie.wasm",
+    "/zkp-static/cookie_final.zkey"
+  );
 
           console.log("publicSignals:", publicSignals);
 
