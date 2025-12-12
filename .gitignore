@@ -17,3 +17,6 @@ public.json
 
 # Secrets/config
 .env
+backend/ads.db
+backend/ads.db-shm
+backend/ads.db-wal
