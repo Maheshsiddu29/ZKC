@@ -18,11 +18,8 @@ The digital advertising ecosystem has long relied on tracking technologies, most
 
 2. **Cross-Site Tracking**: Third-party cookies enable tracking across multiple websites, building comprehensive user profiles without explicit consent.
 
-3. **Regulatory Compliance**: Growing privacy regulations such as GDPR, CCPA, and others require explicit consent and limit data collection practices.
+3. **User Trust**: Privacy-conscious users increasingly employ ad blockers and privacy tools, reducing the effectiveness of traditional advertising systems.
 
-4. **User Trust**: Privacy-conscious users increasingly employ ad blockers and privacy tools, reducing the effectiveness of traditional advertising systems.
-
-The advertising industry faces a fundamental tension: effective personalization requires user data, but users and regulators demand greater privacy protection. This challenge has led to the exploration of privacy-preserving technologies that can reconcile these competing interests.
 
 ### 1.2 Problem Statement
 
@@ -42,8 +39,6 @@ This work introduces Zero-Knowledge Cookie (ZKC), a cryptographic framework that
 2. **Maintain Session State Securely**: The system uses nullifiers to prevent proof replay attacks while maintaining user anonymity across sessions.
 
 3. **Enable Fine-Grained Targeting**: Advertisers can target users based on demographic predicates (age ranges), interest categories, and intent segments (high-intent, cart abandoners, recent buyers) without accessing raw user data.
-
-4. **Provide Cryptographic Guarantees**: The use of zk-SNARKs provides mathematical guarantees that proofs are valid without revealing private inputs.
 
 ### 1.4 System Overview
 
