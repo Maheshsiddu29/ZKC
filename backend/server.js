@@ -11,10 +11,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json({ limit: "1mb" }));
 
-// Serve ad images (you may already have this)
+// Serve ad images 
 app.use("/static", express.static(path.join(__dirname, "static")));
 
-// Serve circuit artifacts (wasm + zkey + vkey if needed)
+// Serve circuit artifacts 
 app.use("/zkp-static", express.static(path.join(__dirname, "..", "build")));
 
 // Serve snarkjs browser bundle
@@ -32,7 +32,7 @@ app.use("/api/events", eventsRoutes);
 app.use("/zkp", zkpRoutes);
 app.use("/ads", adsRoutes);
 
-// health + demo HTML
+// health + demo html
 app.get("/health", (req, res) => res.json({ ok: true, now: Date.now() }));
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "ad-demo.html"));

@@ -9,15 +9,15 @@ export async function challenge(req, res) {
     const mask = Number(req.query.mask || 0);
     if (!host) return res.json({ ok: false, error: "missing_host" });
 
-    // random 16-byte hex nonce (for display/logging)
+    // random 16byte hex nonce
     const nonceHex = crypto.randomBytes(16).toString("hex");
-    // store the **decimal field** form for verification
+    // store the decimal field form for verification
     const nonceDec = hexToField(nonceHex);
 
-    const origin_id = originToField(host); // decimal field for circuit
+    const origin_id = originToField(host); //decimal field for circuit
     const nowYear = new Date().getFullYear();
 
-    // Save decimal nonce with metadata
+    // saving decimal nonce with metadata
     saveNonce(nonceDec, { originId: origin_id, mask });
 
     return res.json({

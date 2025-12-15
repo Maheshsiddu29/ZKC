@@ -1,3 +1,5 @@
+// middleware/session.js
+
 import cookieSignature from "cookie-signature";
 
 const SESSION_SIGN_SECRET = process.env.SESSION_SECRET || "dev_secret_change_in_prod";
@@ -32,7 +34,7 @@ export function requireSession(req, res, next) {
       return res.status(401).json({ ok: false, error: "session_expired" });
     }
 
-    // attach to request for downstream handlers
+    
     req.zk = {
       origin: payload.origin,
       mask: payload.mask,

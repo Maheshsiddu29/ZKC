@@ -6,12 +6,12 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Single SQLite file for ads
+// single SQLite file for ads
 const DB_PATH = path.resolve(__dirname, "../ads.db");
 
 const db = new Database(DB_PATH);
 
-// Optional but nice for safety
+// optional 
 db.pragma("journal_mode = WAL");
 
 export default db;

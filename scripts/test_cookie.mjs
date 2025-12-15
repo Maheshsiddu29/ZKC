@@ -5,10 +5,6 @@ import assert from "node:assert/strict";
 import path from "node:path";
 
 
-// const WASM = "build/cookie_js/cookie.wasm";
-// const ZKEY = "build/cookie_final.zkey";
-// const VK_PATH = "build/cookie_verification_key.json";
-
 const WASM = path.resolve("../build/cookie_js/cookie.wasm");
 const ZKEY = path.resolve("../build/cookie_final.zkey");
 const VK_PATH = path.resolve("../build/cookie_verification_key.json");

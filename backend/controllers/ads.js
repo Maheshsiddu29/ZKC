@@ -156,10 +156,9 @@ function categoryToInterestKey(category) {
   }
 }
 
-/**
- * Derive *ephemeral* interest from the current search query.
- * e.g. query "fan" -> category "fan_cooling" -> interestKey "int_gadgets".
- */
+// Figure out a temporary interest based on the current search
+// eample "fan" → "fan_cooling" → "int_gadgets"
+// This is just for this session nothing permanent
 function deriveSearchInterestFromQuery(qRaw) {
   const text = (qRaw || "").toString().trim();
   if (!text) return {};
@@ -189,13 +188,7 @@ const CATEGORY_IMAGES = {
   generic: "/static/category-default.jpg",
 };
 
-/**
- * Relevance scoring:
- * - query overlap
- * - bonus if user's interests align with product's interest
- * - extra bonus for hi_intent_recent / cart_abandoner in that vertical
- * - bid as tie-breaker
- */
+// Score ads based on query match, user interest fit, strong intent signals, and bid if needed
 function scoreCampaign({ queryTokens, row, predicates }) {
   const text = getSearchText(row);
   const textTokens = tokenize(text);
@@ -219,11 +212,11 @@ function scoreCampaign({ queryTokens, row, predicates }) {
     }
 
     if (predicates.cart_abandoner) {
-      score += 5; // simulate retargeting cart abandoners
+      score += 5; 
     }
 
     if (predicates.recent_buyer) {
-      // mild boost or penalty – tweak as you like
+      // mild boost or penalty 
       score += 1;
     }
   }
@@ -232,13 +225,7 @@ function scoreCampaign({ queryTokens, row, predicates }) {
   return score + bid;
 }
 
-/**
- * Combine:
- * - ZK predicates (stable profile)
- * - search-derived interests (ephemeral, per-query)
- *
- * This is what we actually use for targeting and what we return in debug.
- */
+// Mix longterm ZK info with shortterm search signals. This is what actually decides which ad we show
 export function computeEffectivePredicates({ basePredicates = {}, qRaw }) {
   const base = basePredicates || {};
   const extra = deriveSearchInterestFromQuery(qRaw);
@@ -261,9 +248,7 @@ export function computeEffectivePredicates({ basePredicates = {}, qRaw }) {
   return merged;
 }
 
-/**
- * GET /ads?query=...
- */
+
 export function getAd(req, res) {
   try {
     const ttl = 60;
@@ -301,7 +286,7 @@ export function getAd(req, res) {
         }
       }
 
-      // Use combined predicates (ZK + search intent)
+      // Use combined predicates (ZK+search intent)
       if (!matchesConditions(conditions, predicates)) continue;
 
       const category = inferCategory(row);
@@ -319,7 +304,7 @@ export function getAd(req, res) {
       const primary = candidates[0];
       const primaryCategory = primary.category;
 
-      // only same-category products in slideshow
+      // for only same category products 
       let sameCat = candidates.filter(
         (c) => c.category === primaryCategory,
       );
@@ -336,7 +321,7 @@ export function getAd(req, res) {
 
         return {
           id: row.id,
-          title: row.id, // display real product text from id
+          title: row.id, // displaying real product text from id
           category,
           imageUrl,
           clickUrl: row.click_url || FALLBACK_AD.clickUrl,

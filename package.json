@@ -1,8 +1,12 @@
 {
-  "devDependencies": {
-    "circomlib": "^2.0.5",
-    "snarkjs": "^0.7.5"
+  "name": "zkc-backend",
+  "version": "1.0.0",
+  "type": "module",
+
+  "scripts": {
+    "test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
+
   "dependencies": {
     "better-sqlite3": "^12.5.0",
     "cookie-parser": "^1.4.7",
@@ -10,5 +14,14 @@
     "express": "^4.22.1",
     "node-fetch": "^3.3.2",
     "snarkjs": "^0.7.5"
-  }
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4",
+    "snarkjs": "^0.7.5"
+  },
+  "scripts": {
+  "test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js"
+}
+
 }
