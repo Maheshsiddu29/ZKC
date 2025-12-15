@@ -60,7 +60,7 @@ export function verifySession(token) {
 export function setZkSessionCookie(res, sessionString) {
   res.cookie("zk_session", sessionString, {
     httpOnly: true,
-    secure: false, // set true in prod / behind HTTPS
+    secure: false, 
     sameSite: "lax",
     maxAge: SESSION_TTL_SECONDS * 1000,
     path: "/",

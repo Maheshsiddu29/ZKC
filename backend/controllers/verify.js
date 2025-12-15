@@ -13,7 +13,6 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Adjust if your vk path is different
 const VK_PATH = path.resolve(
   __dirname,
   "../../build/cookie_verification_key.json",
@@ -70,7 +69,7 @@ const IDX = {
 
 let VK = null;
 
-// Load verification key once
+// loading verification key once
 (async () => {
   try {
     VK = JSON.parse(await fs.readFile(VK_PATH, "utf8"));
@@ -97,9 +96,9 @@ export async function postVerify(req, res) {
     const asString = (i) => String(publicSignals[i]);
     const asBool = (i) => Number(publicSignals[i] || 0) === 1;
 
-    // --- 1) Bind to issued challenge (nonce single-use + TTL) ---
+    // 1) Tie the proof to the issued challenge
     const nonceDec = asString(IDX.nonce);
-    const meta = consumeNonce(nonceDec); // { originId, mask, exp } or undefined
+    const meta = consumeNonce(nonceDec); // {originId, mask, exp} or undefined
     if (!meta) {
       return res.status(409).json({
         ok: false,
@@ -107,7 +106,7 @@ export async function postVerify(req, res) {
       });
     }
 
-    // --- 2) Enforce origin & mask equality with what we issued ---
+    // 2) Make sure the origin and category mask
     const origin_pub = String(BigInt(asString(IDX.origin)));
     const mask_pub = Number(publicSignals[IDX.mask] || 0);
 
@@ -118,7 +117,7 @@ export async function postVerify(req, res) {
       return res.status(400).json({ ok: false, error: "mask_mismatch" });
     }
 
-    // --- 3) Verify ZK proof ---
+    // 3) Verify the zero-knowledge proof
     const ok = await groth16.verify(VK, publicSignals, proof);
     if (!ok) {
       return res
@@ -126,14 +125,14 @@ export async function postVerify(req, res) {
         .json({ ok: false, error: "zk_verification_failed" });
     }
 
-    // --- 4) Nullifier replay protection ---
+    // 4) Prevent replay attacks using the nullifier
     const nullifier = asString(IDX.nullifier);
     if (isNullifierSeen(nullifier)) {
       return res.status(409).json({ ok: false, error: "nullifier_replay" });
     }
     addNullifier(nullifier);
 
-    // --- 5) Build rich predicates ---
+    // 5) Build rich predicates
     const age18 = asBool(IDX.predAge18);
     const age25 = asBool(IDX.predAge25);
     const age35 = asBool(IDX.predAge35);
@@ -148,7 +147,7 @@ export async function postVerify(req, res) {
     const cart_abandoner    = asBool(IDX.cartAbandoner);
     const recent_buyer      = asBool(IDX.recentBuyer);
 
-    // "any" = OR of interest bits, plus legacy predAny if your circuit still outputs it
+    
     const anyFromInterests =
       int_home_kitchen ||
       int_personal_care ||
@@ -181,7 +180,7 @@ export async function postVerify(req, res) {
       any,
     };
 
-    // --- 6) Create signed ZK session and set cookie ---
+    // 6) Create a signed ZK session and set it as a cookie
     const sessionPayload = createSessionPayload({
       origin: meta.originId,
       mask: meta.mask,

@@ -227,7 +227,7 @@
       </header>
 
       <div class="layout">
-        <!-- LEFT: Controls + server responses -->
+        <!-- controls + server responses -->
         <div class="card">
           <h2>Controls</h2>
           <p>
@@ -237,7 +237,7 @@
           </p>
 
           <div class="row-2">
-            <!-- Search box -->
+            <!-- search box -->
             <div class="search-box">
               <label for="search-input">Search products (context for ads)</label>
               <input
@@ -248,7 +248,7 @@
               <button id="search-btn" type="button">Search</button>
             </div>
 
-            <!-- ZKP setup -->
+            <!-- zkp setup -->
             <div class="zkp-box">
               <div style="display: flex; align-items: center; gap: 6px">
                 <label for="dob-year">ZK cookie setup</label>
@@ -281,7 +281,7 @@
           <pre id="debug">Ready.</pre>
         </div>
 
-        <!-- RIGHT: Ad display -->
+        <!-- Ads display -->
         <div class="card">
           <div class="ad-header">
             <h2>Current ad</h2>
@@ -301,12 +301,12 @@
       </div>
     </div>
 
-    <!-- snarkjs bundle served as /zkp-lib/snarkjs.min.js -->
+    <!-- snarkjs bundle as /zkp-lib/snarkjs.min.js -->
     <script src="/zkp-lib/snarkjs.min.js"></script>
     <script>
       const { groth16 } = snarkjs;
 
-      // Field modulus from bn128
+      // field modulus from bn128
       const FIELD_P = BigInt(
         "21888242871839275222246405745257275088548364400416034343698204186575808495617"
       );
@@ -333,7 +333,7 @@
       }
 
       function packInterests({ tech, gaming }) {
-        // simple bit packing:
+        // simple bit packing
         // bit 0 = gaming, bit 1 = tech
         let v = 0;
         if (gaming) v |= 1 << 0;
@@ -394,7 +394,7 @@
           // render first ad immediately
           renderCurrent();
 
-          // clear previous slideshow (if any)
+          // clear previous slideshow
           if (slideshowTimer) clearInterval(slideshowTimer);
 
           // rotate if multiple ads
@@ -402,7 +402,7 @@
             slideshowTimer = setInterval(() => {
               idx = (idx + 1) % ads.length;
               renderCurrent();
-            }, 2000); // 2 seconds per product
+            }, 2000); // 2 second per product
           }
         } catch (e) {
           console.error("refreshAd error:", e);
@@ -411,7 +411,7 @@
         }
       }
 
-      // === Classic search flow → /api/events/search ===
+      // === search flow as /api/events/search ===
       async function handleSearch() {
         const q = document.getElementById("search-input").value || "";
         if (!q.trim()) {
@@ -431,7 +431,7 @@
           const data = await res.json();
           console.log("Search response:", data);
           setDebug(data);
-          // Do NOT override predicates pill here; that should reflect ZK flow.
+          // Dont override predicates pill here, that should reflect ZK flow
           await refreshAd();
         } catch (e) {
           console.error("search error:", e);
@@ -439,7 +439,7 @@
         }
       }
 
-      // === ZK flow → /zkp/challenge + groth16.fullProve + /zkp/verify ===
+      // === ZK flow as /zkp/challenge + groth16.fullProve + /zkp/verify ===
       async function handleZkSetup() {
         const dobYear = Number(
           document.getElementById("dob-year").value || "0"
@@ -506,7 +506,7 @@ try {
 
           console.log("publicSignals:", publicSignals);
 
-          // 4) send to /zkp/verify (sets zk_session cookie)
+          // 4) send to /zkp/verify (sets the zk_session cookie)
           const verifyRes = await fetch("/zkp/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -526,7 +526,7 @@ try {
             setPredicates(verifyData.predicates);
           }
 
-          // zk_session is now set; refresh ad for whatever lastQuery is
+          // zk_session is set, now refresh ad for whatever lastQuery is
           await refreshAd();
         } catch (e) {
           console.error("ZK setup error:", e);
@@ -534,7 +534,7 @@ try {
         }
       }
 
-      // Wire up events
+      // Wire the events
       document
         .getElementById("search-btn")
         .addEventListener("click", (e) => {
@@ -547,7 +547,7 @@ try {
         handleZkSetup();
       });
 
-      // Initial ad load (no query, no zk_session -> fallback/generic)
+      // initial ad load 
       refreshAd().catch(console.error);
     </script>
   </body>

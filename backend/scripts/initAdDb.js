@@ -27,7 +27,7 @@ const insert = db.prepare(`
   VALUES (@id, @title, @image_url, @click_url, @conditions_json, @bid, 1)
 `);
 
-// Only gaming-18 is "adults-only". age18:true is required.
+// only gaming-18 is adults-only age18:true is required
 const campaigns = [
   {
     id: "gaming-18",

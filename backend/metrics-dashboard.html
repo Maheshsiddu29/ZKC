@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>ZK Metrics Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  body { background-color: #0d1117; color: #e6edf3; }
+  .card { background: #161b22; border-radius: 12px; padding: 20px; }
+</style>
+
+</head>
+<body class="p-6">
+
+<h1 class="text-3xl font-bold mb-6">🔍 ZK-Cookie Metrics Dashboard</h1>
+
+<!-- Summary Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+
+  <div class="card">
+    <h2 class="text-xl font-semibold">Personalization Rate</h2>
+    <p id="personalizationRate" class="text-3xl font-bold mt-2">--%</p>
+  </div>
+
+  <div class="card">
+    <h2 class="text-xl font-semibold">Fill Rate</h2>
+    <p id="fillRate" class="text-3xl font-bold mt-2">--%</p>
+  </div>
+
+  <div class="card">
+    <h2 class="text-xl font-semibold">Session Share</h2>
+    <p id="sessionShare" class="text-3xl font-bold mt-2">--%</p>
+  </div>
+
+</div>
+
+<!-- Latency -->
+<div class="card mb-8">
+  <h2 class="text-xl font-semibold mb-2">Average Latency (ms)</h2>
+  <p id="avgLatency" class="text-3xl font-bold">-- ms</p>
+</div>
+
+<!-- Charts -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+  <!-- Fallback vs Personalized -->
+  <div class="card">
+    <h2 class="text-xl font-semibold mb-4">Fallback vs Personalized Impressions</h2>
+    <canvas id="impressionChart"></canvas>
+  </div>
+
+  <!-- Vertical Match Distribution -->
+  <div class="card">
+    <h2 class="text-xl font-semibold mb-4">Vertical Category Matches</h2>
+    <canvas id="verticalChart"></canvas>
+  </div>
+
+</div>
+
+<script>
+let impressionChart, verticalChart;
+
+function initCharts() {
+  const ctx1 = document.getElementById("impressionChart").getContext("2d");
+  impressionChart = new Chart(ctx1, {
+    type: "doughnut",
+    data: {
+      labels: ["Fallback", "Personalized"],
+      datasets: [
+        {
+          data: [0, 0],
+          backgroundColor: ["#ef4444", "#22c55e"],
+        }
+      ]
+    }
+  });
+
+  const ctx2 = document.getElementById("verticalChart").getContext("2d");
+  verticalChart = new Chart(ctx2, {
+    type: "bar",
+    data: {
+      labels: ["gadgets", "fitness", "beauty", "home_kitchen"],
+      datasets: [
+        {
+          label: "Matches",
+          data: [0, 0, 0, 0],
+          backgroundColor: "#3b82f6"
+        }
+      ]
+    }
+  });
+}
+
+async function updateMetrics() {
+  const res = await fetch("/metrics");
+  const m = await res.json();
+
+  // Update text stats
+  document.getElementById("personalizationRate").textContent =
+    (m.personalizationRate * 100).toFixed(1) + "%";
+
+  document.getElementById("fillRate").textContent =
+    (m.fillRate * 100).toFixed(1) + "%";
+
+  document.getElementById("sessionShare").textContent =
+    (m.sessionAdShare * 100).toFixed(1) + "%";
+
+  document.getElementById("avgLatency").textContent =
+    m.avgLatencyMs.toFixed(2) + " ms";
+
+  // Update impression chart
+  impressionChart.data.datasets[0].data = [
+    m.fallbackImpressions,
+    m.personalizedImpressions
+  ];
+  impressionChart.update();
+
+  // Update vertical chart
+  verticalChart.data.datasets[0].data = [
+    m.verticalMatches.gadgets,
+    m.verticalMatches.fitness,
+    m.verticalMatches.beauty,
+    m.verticalMatches.home_kitchen
+  ];
+  verticalChart.update();
+}
+
+// Init
+initCharts();
+updateMetrics();
+setInterval(updateMetrics, 2000);
+</script>
+
+</body>
+</html>
