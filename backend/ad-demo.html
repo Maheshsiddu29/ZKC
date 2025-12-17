@@ -436,6 +436,7 @@
         } catch (e) {
           console.error("search error:", e);
           setDebug("Search error: " + e.message);
+          if (data.predicates) setPredicates(data.predicates);
         }
       }
 
