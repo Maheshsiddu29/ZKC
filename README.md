@@ -2,7 +2,7 @@
 
 ## Abstract
 
-rivacy concerns around online advertising are inevitable
+Privacy concerns around online advertising are inevitable
 since tracking cookies and user profiling are needed to serve
 targeted advertisements. We present a novel approach to
 this space, Zero-Knowledge Cookies (ZKC), to enable per-
